@@ -33,6 +33,30 @@ code/prepro_data/
 ```
 python3 gen_data.py --in_path ../data --out_path prepro_data
 
+#生成的结果
+code/prepro_data/
+├── README.md
+├── dev_dev.json
+├── dev_dev_char.npy
+├── dev_dev_ner.npy
+├── dev_dev_pos.npy
+├── dev_dev_word.npy
+├── dev_test.json
+├── dev_test_char.npy
+├── dev_test_ner.npy
+├── dev_test_pos.npy
+├── dev_test_word.npy
+├── dev_train.json
+├── dev_train_char.npy
+├── dev_train_ner.npy
+├── dev_train_pos.npy
+├── dev_train_word.npy
+├── id2rel.json
+├── train.json
+├── train_char.npy
+├── train_ner.npy
+├── train_pos.npy
+├── train_word.npy
 ```
 
 ## 2. 任务1， 关系抽取
