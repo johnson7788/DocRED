@@ -126,7 +126,7 @@ def init(data_file_name, rel2id, max_length = 512, is_training = True, suffix=''
 
 
 	# saving
-	print("Saving files")
+	print("开始生成id到向量的映射文件，保存成npy格式")
 	if is_training:
 		name_prefix = "train"
 	else:
@@ -177,12 +177,12 @@ def init(data_file_name, rel2id, max_length = 512, is_training = True, suffix=''
 				sen_pos[i][v['pos'][0]:v['pos'][1]] = idx
 				sen_ner[i][v['pos'][0]:v['pos'][1]] = ner2id[v['type']]
 
-	print("Finishing processing")
+	print("开始保存各种向量文件")
 	np.save(os.path.join(out_path, name_prefix + suffix + '_word.npy'), sen_word)
 	np.save(os.path.join(out_path, name_prefix + suffix + '_pos.npy'), sen_pos)
 	np.save(os.path.join(out_path, name_prefix + suffix + '_ner.npy'), sen_ner)
 	np.save(os.path.join(out_path, name_prefix + suffix + '_char.npy'), sen_char)
-	print("Finish saving")
+	print("保存完成")
 
 
 
