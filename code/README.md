@@ -66,6 +66,9 @@ code/prepro_data/
 training:
 ```
 CUDA_VISIBLE_DEVICES=0 python3 train.py --model_name BiLSTM --save_name checkpoint_BiLSTM --train_prefix dev_train --test_prefix dev_dev
+
+#默认不是用GPU，如果使用，需要
+ python3 train.py --model_name BiLSTM --save_name checkpoint_BiLSTM --train_prefix dev_train --test_prefix dev_dev --gpu
 ```
 
 testing (--test_prefix dev_dev for dev set, dev_test for test set):

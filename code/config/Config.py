@@ -11,6 +11,7 @@ import json
 import sys
 import sklearn.metrics
 from tqdm import tqdm
+from tqdm.auto import trange
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -46,7 +47,8 @@ class Config(object):
 		self.acc_total = Accuracy()
 		self.data_path = './prepro_data/'
 		self.use_bag = False
-		self.use_gpu = True
+		#是否使用GPU
+		self.use_gpu = False
 		self.is_training = True
 		self.max_length = 512
 		self.pos_num = 2 * self.max_length
@@ -70,8 +72,8 @@ class Config(object):
 		self.epoch_range = None
 		self.cnn_drop_prob = 0.5  # for cnn
 		self.keep_prob = 0.8  # for lstm
-
-		self.period = 50
+		# 每多少个step，打印一次日志
+		self.period = 1
 
 		self.batch_size = 40
 		self.h_t_limit = 1800
@@ -187,25 +189,41 @@ class Config(object):
 
 	def get_train_batch(self):
 		random.shuffle(self.train_order)
+		if self.use_gpu:
+			context_idxs = torch.LongTensor(self.batch_size, self.max_length).cuda()
+			context_pos = torch.LongTensor(self.batch_size, self.max_length).cuda()
+			h_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length).cuda()
+			t_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length).cuda()
+			relation_multi_label = torch.Tensor(self.batch_size, self.h_t_limit, self.relation_num).cuda()
+			relation_mask = torch.Tensor(self.batch_size, self.h_t_limit).cuda()
 
-		context_idxs = torch.LongTensor(self.batch_size, self.max_length).cuda()
-		context_pos = torch.LongTensor(self.batch_size, self.max_length).cuda()
-		h_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length).cuda()
-		t_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length).cuda()
-		relation_multi_label = torch.Tensor(self.batch_size, self.h_t_limit, self.relation_num).cuda()
-		relation_mask = torch.Tensor(self.batch_size, self.h_t_limit).cuda()
+			pos_idx = torch.LongTensor(self.batch_size, self.max_length).cuda()
 
-		pos_idx = torch.LongTensor(self.batch_size, self.max_length).cuda()
+			context_ner = torch.LongTensor(self.batch_size, self.max_length).cuda()
+			context_char_idxs = torch.LongTensor(self.batch_size, self.max_length, self.char_limit).cuda()
 
-		context_ner = torch.LongTensor(self.batch_size, self.max_length).cuda()
-		context_char_idxs = torch.LongTensor(self.batch_size, self.max_length, self.char_limit).cuda()
-
-		relation_label = torch.LongTensor(self.batch_size, self.h_t_limit).cuda()
+			relation_label = torch.LongTensor(self.batch_size, self.h_t_limit).cuda()
 
 
-		ht_pair_pos = torch.LongTensor(self.batch_size, self.h_t_limit).cuda()
+			ht_pair_pos = torch.LongTensor(self.batch_size, self.h_t_limit).cuda()
+		else:
+			context_idxs = torch.LongTensor(self.batch_size, self.max_length)
+			context_pos = torch.LongTensor(self.batch_size, self.max_length)
+			h_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length)
+			t_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length)
+			relation_multi_label = torch.Tensor(self.batch_size, self.h_t_limit, self.relation_num)
+			relation_mask = torch.Tensor(self.batch_size, self.h_t_limit)
 
-		for b in range(self.train_batches):
+			pos_idx = torch.LongTensor(self.batch_size, self.max_length)
+
+			context_ner = torch.LongTensor(self.batch_size, self.max_length)
+			context_char_idxs = torch.LongTensor(self.batch_size, self.max_length, self.char_limit)
+
+			relation_label = torch.LongTensor(self.batch_size, self.h_t_limit)
+
+			ht_pair_pos = torch.LongTensor(self.batch_size, self.h_t_limit)
+
+		for b in tqdm(range(self.train_batches), desc='Batch_Data: '):
 			start_id = b * self.batch_size
 			cur_bsz = min(self.batch_size, self.train_len - start_id)
 			cur_batch = list(self.train_order[start_id: start_id + cur_bsz])
@@ -225,7 +243,7 @@ class Config(object):
 			max_h_t_cnt = 1
 
 
-			for i, index in enumerate(cur_batch):
+			for i, index in enumerate(tqdm(cur_batch, desc='Current Batch: ', disable=False)):
 				context_idxs[i].copy_(torch.from_numpy(self.data_train_word[index, :]))
 				context_pos[i].copy_(torch.from_numpy(self.data_train_pos[index, :]))
 				context_char_idxs[i].copy_(torch.from_numpy(self.data_train_char[index, :]))
@@ -436,8 +454,10 @@ class Config(object):
 		if gpu:
 			#如果使用gpu，那么放到gpu上
 			ori_model.cuda()
+		#设置下self.use_cuda
+		self.set_use_gpu(use_gpu=gpu)
 		model = nn.DataParallel(ori_model)
-
+		#优化器参数
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()))
 		# nll_average = nn.CrossEntropyLoss(size_average=True, ignore_index=IGNORE_INDEX)
 		BCE = nn.BCEWithLogitsLoss(reduction='none')
@@ -469,7 +489,7 @@ class Config(object):
 		plt.title('Precision-Recall')
 		plt.grid(True)
 
-		for epoch in range(self.max_epoch):
+		for epoch in trange(self.max_epoch, desc='Epoch: '):
 
 			self.acc_NA.clear()
 			self.acc_not_NA.clear()
@@ -502,6 +522,7 @@ class Config(object):
 				output = output.data.cpu().numpy()
 
 				optimizer.zero_grad()
+				print(f"开始损失反向传播计算梯度")
 				loss.backward()
 				optimizer.step()
 
