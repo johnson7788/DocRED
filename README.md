@@ -1,11 +1,14 @@
 # DocRED
-Dataset and code for baselines for [DocRED: A Large-Scale Document-Level Relation Extraction Dataset](https://arxiv.org/abs/1906.06127v3)
+论文的代码 [DocRED: A Large-Scale Document-Level Relation Extraction Dataset](https://arxiv.org/abs/1906.06127v3)
 
-Multiple entities in a document generally exhibit complex inter-sentence relations, and cannot be well handled by existing relation extraction (RE) methods that typically focus on extracting intra-sentence relations for single entity pairs. In order to accelerate the research on document-level RE, we introduce DocRED, a new dataset constructed from Wikipedia and Wikidata with three features: 
 
-+ DocRED annotates both named entities and relations, and is the largest human-annotated dataset for document-level RE from plain text.
-+ DocRED requires reading multiple sentences in a document to extract entities and infer their relations by synthesizing all information of the document.
-+ Along with the human-annotated data, we also offer large-scale distantly supervised data, which enables DocRED to be adopted for both supervised and weakly supervised scenarios.
+文档中的多个实体通常表现出复杂的句间关系，现有的关系抽取（RE）方法无法很好地处理，因为现有的关系提取（RE）方法通常侧重于提取单个实体对的句内关系。
+为了加快文档级RE的研究，我们引入了DocRED，这是一个由Wikipedia和Wikidata构建的具有三个特征的新数据集。
+
++ DocRED对命名的实体和关系进行标注，是最大的从纯文本中提取文档级RE的人工标注数据集。
++ DocRED需要阅读文档中的多个句子来抽取实体，并通过综合文档的所有信息来推理它们的关系。
++ 除了人工标注的数据，我们还提供了大规模的远端有监督数据，这使得DocRED可以同时适用于监督和弱监督的场景。
+
 
 ## Codalab
 If you are interested in our dataset, you are welcome to join in the Codalab competition at [DocRED](https://competitions.codalab.org/competitions/20717)
