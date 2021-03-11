@@ -20,6 +20,7 @@ parser.add_argument('--save_name', type = str)
 
 parser.add_argument('--train_prefix', type = str, default = 'dev_train')
 parser.add_argument('--test_prefix', type = str, default = 'dev_dev')
+parser.add_argument('--gpu', action='store_true', help='是否使用GPU，默认不使用')
 
 
 args = parser.parse_args()
@@ -35,4 +36,4 @@ con.set_max_epoch(200)
 con.load_train_data()
 con.load_test_data()
 # con.set_train_model()
-con.train(model[args.model_name], args.save_name)
+con.train(model[args.model_name], args.save_name, args.gpu)

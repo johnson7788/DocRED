@@ -22,12 +22,14 @@ data/
 ├── train_annotated.json
 └── train_distant.json
 
-确保prepro_data下存在 rel2id.json文件
+确保prepro_data下存在 rel2id.json文件, 从google drive下载
 code/prepro_data/
 ├── char2id.json
 ├── ner2id.json
 ├── rel2id.json
 ├── word2id.json
+├── char_vec.npy
+├── vec.npy
 ```
 ### 开始生成训练需要的数据
 ```

@@ -62,6 +62,7 @@ class Config(object):
 		self.checkpoint_dir = './checkpoint'
 		self.fig_result_dir = './fig_result'
 		self.test_epoch = 5
+		#是否使用预训练的模型参数,如果使用，在模型初始化后，会自动加载self.pretrain_model
 		self.pretrain_model = None
 
 
@@ -420,12 +421,21 @@ class Config(object):
 				   'indexes': indexes
 				   }
 
-	def train(self, model_pattern, model_name):
-
+	def train(self, model_pattern, model_name, gpu):
+		"""
+		训练模型
+		:param model_pattern: 要初始化的模型, <class 'models.BiLSTM.BiLSTM'>
+		:param model_name: 例如： 'checkpoint_BiLSTM'
+		:param gpu: 是否使用GPU， False
+		:return:
+		"""
+		#开始初始化模型
 		ori_model = model_pattern(config = self)
 		if self.pretrain_model != None:
 			ori_model.load_state_dict(torch.load(self.pretrain_model))
-		ori_model.cuda()
+		if gpu:
+			#如果使用gpu，那么放到gpu上
+			ori_model.cuda()
 		model = nn.DataParallel(ori_model)
 
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()))
