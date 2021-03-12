@@ -36,18 +36,60 @@ code/prepro_data/
 python3 gen_data.py --in_path ../data --out_path prepro_data
 
 开始处理文件../data/train_annotated.json
-加载json文件
+加载json文件，可能耗时较长
 一共收集到数据3053条数据
 原始的数据的个数: 3053
 生成的数据的个数: 3053
 开始生成id到向量的映射文件，保存成npy格式
-保存数据文件: prepro_data/dev_train.json, 耗时可能较长
+保存数据文件: prepro_data/train_ano.json, 耗时可能较长
 开始加载char2id.json,  word2id.json, ner2id.json
 开始保存各种向量文件
-保存完成: 每个样本单词到id的映射文件os.path.join(out_path, name_prefix + suffix + '_word.npy'), 形状是:(3053, 512)
-保存完成: 每个样本实体的位置到id的映射文件os.path.join(out_path, name_prefix + suffix + '_pos.npy'), 形状是:(3053, 512)
-保存完成: 每个样本实体类型到id的映射文件os.path.join(out_path, name_prefix + suffix + '_ner.npy'), 形状是:(3053, 512)
-保存完成: 每个样本字符到id的映射文件os.path.join(out_path, name_prefix + suffix + '_char.npy'), 形状是:(3053, 512, 16)
+保存完成: 每个样本单词到id的映射文件prepro_data/train_ano_word.npy, 形状是:(3053, 512)
+保存完成: 每个样本实体的位置到id的映射文件prepro_data/train_ano_pos.npy, 形状是:(3053, 512)
+保存完成: 每个样本实体类型到id的映射文件prepro_data/train_ano_ner.npy, 形状是:(3053, 512)
+保存完成: 每个样本字符到id的映射文件prepro_data/train_ano_char.npy, 形状是:(3053, 512, 16)
+
+开始处理文件../data/train_distant.json
+加载json文件，可能耗时较长
+一共收集到数据101873条数据
+原始的数据的个数: 101873
+生成的数据的个数: 101873
+开始生成id到向量的映射文件，保存成npy格式
+保存数据文件: prepro_data/train_dis.json, 耗时可能较长
+开始加载char2id.json,  word2id.json, ner2id.json
+开始保存各种向量文件
+保存完成: 每个样本单词到id的映射文件prepro_data/train_dis_word.npy, 形状是:(101873, 512)
+保存完成: 每个样本实体的位置到id的映射文件prepro_data/train_dis_pos.npy, 形状是:(101873, 512)
+保存完成: 每个样本实体类型到id的映射文件prepro_data/train_dis_ner.npy, 形状是:(101873, 512)
+保存完成: 每个样本字符到id的映射文件prepro_data/train_dis_char.npy, 形状是:(101873, 512, 16)
+
+开始处理文件../data/dev.json
+加载json文件，可能耗时较长
+一共收集到数据1000条数据
+原始的数据的个数: 1000
+生成的数据的个数: 1000
+开始生成id到向量的映射文件，保存成npy格式
+保存数据文件: prepro_data/dev_dev.json, 耗时可能较长
+开始加载char2id.json,  word2id.json, ner2id.json
+开始保存各种向量文件
+保存完成: 每个样本单词到id的映射文件prepro_data/dev_dev_word.npy, 形状是:(1000, 512)
+保存完成: 每个样本实体的位置到id的映射文件prepro_data/dev_dev_pos.npy, 形状是:(1000, 512)
+保存完成: 每个样本实体类型到id的映射文件prepro_data/dev_dev_ner.npy, 形状是:(1000, 512)
+保存完成: 每个样本字符到id的映射文件prepro_data/dev_dev_char.npy, 形状是:(1000, 512, 16)
+
+开始处理文件../data/test.json
+加载json文件，可能耗时较长
+一共收集到数据1000条数据
+原始的数据的个数: 1000
+生成的数据的个数: 1000
+开始生成id到向量的映射文件，保存成npy格式
+保存数据文件: prepro_data/dev_test.json, 耗时可能较长
+开始加载char2id.json,  word2id.json, ner2id.json
+开始保存各种向量文件
+保存完成: 每个样本单词到id的映射文件prepro_data/dev_test_word.npy, 形状是:(1000, 512)
+保存完成: 每个样本实体的位置到id的映射文件prepro_data/dev_test_pos.npy, 形状是:(1000, 512)
+保存完成: 每个样本实体类型到id的映射文件prepro_data/dev_test_ner.npy, 形状是:(1000, 512)
+保存完成: 每个样本字符到id的映射文件prepro_data/dev_test_char.npy, 形状是:(1000, 512, 16)
 
 #生成的结果
 code/prepro_data/
