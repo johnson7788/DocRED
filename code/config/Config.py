@@ -48,7 +48,7 @@ class Config(object):
 		self.data_path = './prepro_data/'
 		self.use_bag = False
 		#是否使用GPU
-		self.use_gpu = False
+		self.use_gpu = args.gpu
 		self.is_training = True
 		self.max_length = 512
 		self.pos_num = 2 * self.max_length
@@ -57,7 +57,8 @@ class Config(object):
 
 		self.coref_size = 20
 		self.entity_type_size = 20
-		self.max_epoch = 20
+		#训练多少epoch
+		self.max_epoch = args.epoch
 		self.opt_method = 'Adam'
 		self.optimizer = None
 
@@ -66,8 +67,6 @@ class Config(object):
 		self.test_epoch = 5
 		#是否使用预训练的模型参数,如果使用，在模型初始化后，会自动加载self.pretrain_model
 		self.pretrain_model = None
-
-
 		self.word_size = 100
 		self.epoch_range = None
 		self.cnn_drop_prob = 0.5  # for cnn
@@ -136,17 +135,20 @@ class Config(object):
 		self.epoch_range = epoch_range
 	
 	def load_train_data(self):
-		print("Reading training data...")
+		print("开始读取训练数据")
 		prefix = self.train_prefix
-
-		print ('train', prefix)
-		self.data_train_word = np.load(os.path.join(self.data_path, prefix+'_word.npy'))
-		self.data_train_pos = np.load(os.path.join(self.data_path, prefix+'_pos.npy'))
-		self.data_train_ner = np.load(os.path.join(self.data_path, prefix+'_ner.npy'))
-		self.data_train_char = np.load(os.path.join(self.data_path, prefix+'_char.npy'))
-		self.train_file = json.load(open(os.path.join(self.data_path, prefix+'.json')))
-
-		print("Finish reading")
+		train_word_file = os.path.join(self.data_path, prefix+'_word.npy')
+		train_pos_file = os.path.join(self.data_path, prefix+'_pos.npy')
+		train_ner_file = os.path.join(self.data_path, prefix+'_ner.npy')
+		train_char_file = os.path.join(self.data_path, prefix+'_char.npy')
+		train_json_file = os.path.join(self.data_path, prefix+'.json')
+		print (f"开始加载训练的词向量{train_word_file}, 实体位置向量{train_pos_file}, 实体类型向量{train_ner_file}，字符向量{train_char_file},训练json文件{train_json_file}")
+		self.data_train_word = np.load(train_word_file)
+		self.data_train_pos = np.load(train_pos_file)
+		self.data_train_ner = np.load(train_ner_file)
+		self.data_train_char = np.load(train_char_file)
+		self.train_file = json.load(open(train_json_file))
+		print("加载完成")
 
 		self.train_len = ins_num = self.data_train_word.shape[0]
 		assert(self.train_len==len(self.train_file))
@@ -439,23 +441,20 @@ class Config(object):
 				   'indexes': indexes
 				   }
 
-	def train(self, model_pattern, model_name, gpu):
+	def train(self, model_pattern, model_name):
 		"""
 		训练模型
 		:param model_pattern: 要初始化的模型, <class 'models.BiLSTM.BiLSTM'>
 		:param model_name: 例如： 'checkpoint_BiLSTM'
-		:param gpu: 是否使用GPU， False
 		:return:
 		"""
 		#开始初始化模型
 		ori_model = model_pattern(config = self)
 		if self.pretrain_model != None:
 			ori_model.load_state_dict(torch.load(self.pretrain_model))
-		if gpu:
+		if self.use_gpu:
 			#如果使用gpu，那么放到gpu上
 			ori_model.cuda()
-		#设置下self.use_cuda
-		self.set_use_gpu(use_gpu=gpu)
 		model = nn.DataParallel(ori_model)
 		#优化器参数
 		optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()))

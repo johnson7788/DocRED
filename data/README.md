@@ -32,8 +32,8 @@ Data Format:
                 ]
   'labels':   [
                 {
-                  'h': vertexSet中的实体的位置,
-                  't': vertexSet中的实体的位置,
+                  'h': 第一个实体在vertexSet中的的索引位置
+                  't': 第二个实体在vertexSet中的的索引位置,
                   'r': relation, 训练集中使用使用的是P6，代表的是rel_info.json中的"head of government"， 
                   'evidence': 支持证据的句子，支持这个关系的句子的id，支持2个实体的关系的佐证的句子
                 }

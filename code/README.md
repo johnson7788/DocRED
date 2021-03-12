@@ -24,16 +24,30 @@ data/
 
 确保prepro_data下存在 rel2id.json文件, 从google drive下载
 code/prepro_data/
-├── char2id.json
-├── ner2id.json
-├── rel2id.json
-├── word2id.json
-├── char_vec.npy
+├── char2id.json  #字符到id的映射 "BLANK": 0, "UNK": 1, "t": 2,
+├── ner2id.json  #实体类型到id的映射 {"BLANK": 0, "ORG": 1, "LOC": 2, "TIME": 3, "PER": 4, "MISC": 5, "NUM": 6}
+├── rel2id.json  关系到id的映射，例如"P1376": 79, "P607": 27,
+├── word2id.json  #单词到id的映射
+├── char_vec.npy   
 ├── vec.npy
 ```
 ### 开始生成训练需要的数据
 ```
 python3 gen_data.py --in_path ../data --out_path prepro_data
+
+开始处理文件../data/train_annotated.json
+加载json文件
+一共收集到数据3053条数据
+原始的数据的个数: 3053
+生成的数据的个数: 3053
+开始生成id到向量的映射文件，保存成npy格式
+保存数据文件: prepro_data/dev_train.json, 耗时可能较长
+开始加载char2id.json,  word2id.json, ner2id.json
+开始保存各种向量文件
+保存完成: 每个样本单词到id的映射文件os.path.join(out_path, name_prefix + suffix + '_word.npy'), 形状是:(3053, 512)
+保存完成: 每个样本实体的位置到id的映射文件os.path.join(out_path, name_prefix + suffix + '_pos.npy'), 形状是:(3053, 512)
+保存完成: 每个样本实体类型到id的映射文件os.path.join(out_path, name_prefix + suffix + '_ner.npy'), 形状是:(3053, 512)
+保存完成: 每个样本字符到id的映射文件os.path.join(out_path, name_prefix + suffix + '_char.npy'), 形状是:(3053, 512, 16)
 
 #生成的结果
 code/prepro_data/
