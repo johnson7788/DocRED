@@ -15,13 +15,17 @@ class BiLSTM(nn.Module):
 	def __init__(self, config):
 		super(BiLSTM, self).__init__()
 		self.config = config
-
+		# 单词向量文件中的单词个数,  config.data_word_vec,  shape, eg: (194784, 100)
 		word_vec_size = config.data_word_vec.shape[0]
 		self.word_emb = nn.Embedding(word_vec_size, config.data_word_vec.shape[1])
+		# 加载词向量
 		self.word_emb.weight.data.copy_(torch.from_numpy(config.data_word_vec))
 
 		self.word_emb.weight.requires_grad = False
+		#是否使用实体类型的特征
 		self.use_entity_type = True
+		#实体类型的数量
+		self.entities_num = 7
 		self.use_coreference = True
 		self.use_distance = True
 
@@ -36,8 +40,9 @@ class BiLSTM(nn.Module):
 		hidden_size = 128
 		input_size = config.data_word_vec.shape[1]
 		if self.use_entity_type:
+			#初始化实体类型的embedding
 			input_size += config.entity_type_size
-			self.ner_emb = nn.Embedding(7, config.entity_type_size, padding_idx=0)
+			self.ner_emb = nn.Embedding(self.entities_num, config.entity_type_size, padding_idx=0)
 
 		if self.use_coreference:
 			input_size += config.coref_size

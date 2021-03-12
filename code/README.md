@@ -28,8 +28,8 @@ code/prepro_data/
 ├── ner2id.json  #实体类型到id的映射 {"BLANK": 0, "ORG": 1, "LOC": 2, "TIME": 3, "PER": 4, "MISC": 5, "NUM": 6}
 ├── rel2id.json  关系到id的映射，例如"P1376": 79, "P607": 27,
 ├── word2id.json  #单词到id的映射
-├── char_vec.npy   
-├── vec.npy
+├── char_vec.npy   #字符向量
+├── vec.npy     #单词向量
 ```
 ### 开始生成训练需要的数据
 ```
@@ -43,7 +43,7 @@ python3 gen_data.py --in_path ../data --out_path prepro_data
 开始生成id到向量的映射文件，保存成npy格式
 保存数据文件: prepro_data/train_ano.json, 耗时可能较长
 开始加载char2id.json,  word2id.json, ner2id.json
-开始保存各种向量文件
+开始保存各种id映射文件
 保存完成: 每个样本单词到id的映射文件prepro_data/train_ano_word.npy, 形状是:(3053, 512)
 保存完成: 每个样本实体的位置到id的映射文件prepro_data/train_ano_pos.npy, 形状是:(3053, 512)
 保存完成: 每个样本实体类型到id的映射文件prepro_data/train_ano_ner.npy, 形状是:(3053, 512)
@@ -57,7 +57,7 @@ python3 gen_data.py --in_path ../data --out_path prepro_data
 开始生成id到向量的映射文件，保存成npy格式
 保存数据文件: prepro_data/train_dis.json, 耗时可能较长
 开始加载char2id.json,  word2id.json, ner2id.json
-开始保存各种向量文件
+开始保存各种id映射文件
 保存完成: 每个样本单词到id的映射文件prepro_data/train_dis_word.npy, 形状是:(101873, 512)
 保存完成: 每个样本实体的位置到id的映射文件prepro_data/train_dis_pos.npy, 形状是:(101873, 512)
 保存完成: 每个样本实体类型到id的映射文件prepro_data/train_dis_ner.npy, 形状是:(101873, 512)
@@ -71,7 +71,7 @@ python3 gen_data.py --in_path ../data --out_path prepro_data
 开始生成id到向量的映射文件，保存成npy格式
 保存数据文件: prepro_data/dev_dev.json, 耗时可能较长
 开始加载char2id.json,  word2id.json, ner2id.json
-开始保存各种向量文件
+开始保存各种id映射文件
 保存完成: 每个样本单词到id的映射文件prepro_data/dev_dev_word.npy, 形状是:(1000, 512)
 保存完成: 每个样本实体的位置到id的映射文件prepro_data/dev_dev_pos.npy, 形状是:(1000, 512)
 保存完成: 每个样本实体类型到id的映射文件prepro_data/dev_dev_ner.npy, 形状是:(1000, 512)
@@ -85,7 +85,7 @@ python3 gen_data.py --in_path ../data --out_path prepro_data
 开始生成id到向量的映射文件，保存成npy格式
 保存数据文件: prepro_data/dev_test.json, 耗时可能较长
 开始加载char2id.json,  word2id.json, ner2id.json
-开始保存各种向量文件
+开始保存各种id映射文件
 保存完成: 每个样本单词到id的映射文件prepro_data/dev_test_word.npy, 形状是:(1000, 512)
 保存完成: 每个样本实体的位置到id的映射文件prepro_data/dev_test_pos.npy, 形状是:(1000, 512)
 保存完成: 每个样本实体类型到id的映射文件prepro_data/dev_test_ner.npy, 形状是:(1000, 512)
@@ -94,6 +94,8 @@ python3 gen_data.py --in_path ../data --out_path prepro_data
 #生成的结果
 code/prepro_data/
 ├── README.md
+├── char2id.json
+├── char_vec.npy
 ├── dev_dev.json
 ├── dev_dev_char.npy
 ├── dev_dev_ner.npy
@@ -104,27 +106,31 @@ code/prepro_data/
 ├── dev_test_ner.npy
 ├── dev_test_pos.npy
 ├── dev_test_word.npy
-├── dev_train.json
-├── dev_train_char.npy
-├── dev_train_ner.npy
-├── dev_train_pos.npy
-├── dev_train_word.npy
 ├── id2rel.json
-├── train.json
-├── train_char.npy
-├── train_ner.npy
-├── train_pos.npy
-├── train_word.npy
+├── ner2id.json
+├── rel2id.json
+├── train_ano.json
+├── train_ano_char.npy
+├── train_ano_ner.npy
+├── train_ano_pos.npy
+├── train_ano_word.npy
+├── train_dis.json
+├── train_dis_char.npy
+├── train_dis_ner.npy
+├── train_dis_pos.npy
+├── train_dis_word.npy
+├── vec.npy
+└── word2id.json
 ```
 
 ## 2. 任务1， 关系抽取
 支持的模型包括, CNN3,LSTM,BiLSTM,ContextAware
 training:
 ```
-CUDA_VISIBLE_DEVICES=0 python3 train.py --model_name BiLSTM --save_name checkpoint_BiLSTM --train_prefix dev_train --test_prefix dev_dev
+CUDA_VISIBLE_DEVICES=0 python3 train.py --model_name BiLSTM --save_name anotation_BiLSTM --do_train --do_dev --do_test
 
 #默认不是用GPU，如果使用，需要
- python3 train.py --model_name BiLSTM --save_name checkpoint_BiLSTM --train_prefix dev_train --test_prefix dev_dev --gpu
+python3 train.py --model_name BiLSTM --save_name anotation_BiLSTM --do_train --do_dev --do_test --gpu
 ```
 
 testing (--test_prefix dev_dev for dev set, dev_test for test set):

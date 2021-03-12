@@ -218,7 +218,7 @@ def init(data_file_name, rel2id, max_length=512, is_training=True, suffix=''):
                 #实体的类型，在实体的位置处设置实体的类型的id
                 sen_ner[i][v['pos'][0]:v['pos'][1]] = ner2id[v['type']]
 
-    print("开始保存各种向量文件")
+    print("开始保存各种id映射文件")
     word_id_file = os.path.join(out_path, name_prefix + suffix + '_word.npy')
     pos_id_file = os.path.join(out_path, name_prefix + suffix + '_pos.npy')
     ner_id_file = os.path.join(out_path, name_prefix + suffix + '_ner.npy')
