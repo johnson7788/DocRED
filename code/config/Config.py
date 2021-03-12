@@ -79,6 +79,7 @@ class Config(object):
         # 每多少个step，打印一次日志
         self.period = 1
         self.batch_size = 8
+        #假设一篇文档中实体之间的关系最多为1800个，其实没那么多，我觉得可以少一点，过滤出实体最多的那篇文档，设置一下即可
         self.h_t_limit = 1800
         self.test_batch_size = self.batch_size
         self.test_relation_limit = 1800
@@ -169,10 +170,11 @@ class Config(object):
             context_idxs = torch.LongTensor(self.batch_size, self.max_length)
             # 上下文位置初始化
             context_pos = torch.LongTensor(self.batch_size, self.max_length)
-            # ？？
+            # h_mapping表示第一个实体的id
             h_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length)
+            # t_mapping表示第二个实体的id
             t_mapping = torch.Tensor(self.batch_size, self.h_t_limit, self.max_length)
-            #关系标签
+            # 关系标签, 是要预测的标签，多标签预测，第i个句子的第j个实体的关系是r
             relation_multi_label = torch.Tensor(self.batch_size, self.h_t_limit, self.relation_num)
             relation_mask = torch.Tensor(self.batch_size, self.h_t_limit)
             # 实体位置初始化
@@ -182,7 +184,7 @@ class Config(object):
             context_char_idxs = torch.LongTensor(self.batch_size, self.max_length, self.char_limit)
 
             relation_label = torch.LongTensor(self.batch_size, self.h_t_limit)
-
+            # 2个实体首次出现的距离作为一个特征, shape torch.Size([8, 1800])
             ht_pair_pos = torch.LongTensor(self.batch_size, self.h_t_limit)
 
         for b in tqdm(range(self.train_batches), desc='Batch_Data: '):
@@ -194,60 +196,63 @@ class Config(object):
             # 把h_mapping和t_mapping中所有值都设为0
             for mapping in [h_mapping, t_mapping]:
                 mapping.zero_()
-            # 把relation_multi_label和relation_mask, pos_idx中所有值都设为0
+            # 把relation_multi_label和relation_mask, pos_idx中所有值都设为0, 要预测出来的标签
             for mapping in [relation_multi_label, relation_mask, pos_idx]:
                 mapping.zero_()
             # ht_pair_pos都设为0
             ht_pair_pos.zero_()
-            #全部用-100填充
+            #全部用-100填充，默认填充-100，表示所有位置都没有关系
             relation_label.fill_(IGNORE_INDEX)
-
+            #有关系样本+没有关系样本的最大的数量，
             max_h_t_cnt = 1
-
+            #开始迭代一个batch的数据
             for i, index in enumerate(tqdm(cur_batch, desc='Current Batch: ', disable=False)):
+                #从预处理数据中取出训练数据
                 context_idxs[i].copy_(torch.from_numpy(self.data_train_word[index, :]))
                 context_pos[i].copy_(torch.from_numpy(self.data_train_pos[index, :]))
                 context_char_idxs[i].copy_(torch.from_numpy(self.data_train_char[index, :]))
                 context_ner[i].copy_(torch.from_numpy(self.data_train_ner[index, :]))
-
+                # pos_idx是一个[1,2,3,4,......]的tensor，表示的是这一条数据这个文档的这个单词位置是否有单词，相当于确定文档的长度
                 for j in range(self.max_length):
                     if self.data_train_word[index, j] == 0:
                         break
                     pos_idx[i, j] = j + 1
-
+                #获取样本的全部信息，获取相比的标签
                 ins = self.train_file[index]
                 labels = ins['labels']
                 idx2label = defaultdict(list)
-
+                # 生成类似， 实体的在vertex的位置id和label的id的映射表。defaultdict(<class 'list'>, {(2, 3): [4], (2, 7): [4], (3, 2): [2, 1], (3, 0): [42], (18, 2): [3, 14], (20, 2): [1], (20, 3): [24], (7, 2): [2, 1], (11, 2): [3], (19, 2): [1], (0, 1): [7], (0, 2): [3], (0, 3): [69]})
                 for label in labels:
                     idx2label[(label['h'], label['t'])].append(label['r'])
-
+                #train_tripe 所有要训练的实体对在vertexSet中的位置
                 train_tripe = list(idx2label.keys())
                 for j, (h_idx, t_idx) in enumerate(train_tripe):
+                    # 实体信息hlist和tlist
                     hlist = ins['vertexSet'][h_idx]
                     tlist = ins['vertexSet'][t_idx]
-
                     for h in hlist:
+                        # i表示第i个样本，j表示第j个实体，最后一维表示位置信息，这个位置的id和这个实体出现的次数和位置有关,对应论文中的mk的定义
                         h_mapping[i, j, h['pos'][0]:h['pos'][1]] = 1.0 / len(hlist) / (h['pos'][1] - h['pos'][0])
 
                     for t in tlist:
                         t_mapping[i, j, t['pos'][0]:t['pos'][1]] = 1.0 / len(tlist) / (t['pos'][1] - t['pos'][0])
-
+                    #获取label
                     label = idx2label[(h_idx, t_idx)]
-
+                    # 对应论文中 dij和dji为文档中两个实体首次提及的相对距离
                     delta_dis = hlist[0]['pos'][0] - tlist[0]['pos'][0]
                     if delta_dis < 0:
                         ht_pair_pos[i, j] = -int(self.dis2idx[-delta_dis])
                     else:
                         ht_pair_pos[i, j] = int(self.dis2idx[delta_dis])
-
+                    #relation_multi_label 是要预测的标签，多标签预测，第i个句子的第j个实体的关系是r
                     for r in label:
                         relation_multi_label[i, j, r] = 1
-
+                    # relation_mask shape, [batch_size, max_num_releations], eg: torch.Size([8, 1800])
                     relation_mask[i, j] = 1
+                    #随机填充一个假的关系
                     rt = np.random.randint(len(label))
                     relation_label[i, j] = label[rt]
-
+                #开始设定没有关系的样本
                 lower_bound = len(ins['na_triple'])
                 # random.shuffle(ins['na_triple'])
                 # lower_bound = max(20, len(train_tripe)*3)
@@ -272,10 +277,10 @@ class Config(object):
                         ht_pair_pos[i, j] = int(self.dis2idx[delta_dis])
 
                 max_h_t_cnt = max(max_h_t_cnt, len(train_tripe) + lower_bound)
-
+            #这一个批次中输入样本的长度, tensor([340, 246, 225, 170, 149, 136, 132, 129])
             input_lengths = (context_idxs[:cur_bsz] > 0).long().sum(dim=1)
+            #最大长度340
             max_c_len = int(input_lengths.max())
-
             yield {'context_idxs': context_idxs[:cur_bsz, :max_c_len].contiguous(),
                    'context_pos': context_pos[:cur_bsz, :max_c_len].contiguous(),
                    'h_mapping': h_mapping[:cur_bsz, :max_h_t_cnt, :max_c_len],
@@ -438,7 +443,7 @@ class Config(object):
             self.acc_NA.clear()
             self.acc_not_NA.clear()
             self.acc_total.clear()
-
+            #获取一个batch的数据的特征
             for data in self.get_train_batch():
 
                 context_idxs = data['context_idxs']
@@ -452,10 +457,10 @@ class Config(object):
                 context_ner = data['context_ner']
                 context_char_idxs = data['context_char_idxs']
                 ht_pair_pos = data['ht_pair_pos']
-
+                # 尽量把它们的距离变成正数
                 dis_h_2_t = ht_pair_pos + 10
                 dis_t_2_h = -ht_pair_pos + 10
-
+                #特征放入模型, predict_re [batch_size, max_entity_num, relations]
                 predict_re = model(context_idxs, context_pos, context_ner, context_char_idxs, input_lengths, h_mapping,
                                    t_mapping, relation_mask, dis_h_2_t, dis_t_2_h)
                 loss = torch.sum(BCE(predict_re, relation_multi_label) * relation_mask.unsqueeze(2)) / (

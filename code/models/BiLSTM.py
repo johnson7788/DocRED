@@ -26,7 +26,9 @@ class BiLSTM(nn.Module):
 		self.use_entity_type = True
 		#实体类型的数量
 		self.entities_num = 7
+		#是否使用实体的位置到id的映射
 		self.use_coreference = True
+		#是否使用2个实体之间距离的特征
 		self.use_distance = True
 
 		# performance is similar with char_embed
@@ -62,23 +64,37 @@ class BiLSTM(nn.Module):
 
 	def forward(self, context_idxs, pos, context_ner, context_char_idxs, context_lens, h_mapping, t_mapping,
 				relation_mask, dis_h_2_t, dis_t_2_h):
+		"""
+		:param context_idxs: 整个文档的序列的id，【batch_size, max_length_in_batch】 torch.Size([8, 340])
+		:param pos:  实体的位置到id的映射, torch.Size([8, 340])
+		:param context_ner:  实体类型到id,  torch.Size([8, 340])
+		:param context_char_idxs:   torch.Size([8, 340, 16])   [batch_size, seq_len, char_len]
+		:param context_lens: 文档的长度，tensor([340, 246, 225, 170, 149, 136, 132, 129])
+		:param h_mapping: 第一个实体的表示， [batch_size,max_实体个数, seq_len]  torch.Size([8, 552, 340])
+		:param t_mapping: 第二个实体的表示
+		:param relation_mask:  torch.Size([8, 552]), 2个实体之间mask
+		:param dis_h_2_t:  torch.Size([8, 552]), 第一个实体到第二个实体的距离
+		:param dis_t_2_h:  torch.Size([8, 552]),第二个实体的距离到第一个实体的距离
+		:return:
+		"""
 		# para_size, char_size, bsz = context_idxs.size(1), context_char_idxs.size(2), context_idxs.size(0)
 		# context_ch = self.char_emb(context_char_idxs.contiguous().view(-1, char_size)).view(bsz * para_size, char_size, -1)
 		# context_ch = self.char_cnn(context_ch.permute(0, 2, 1).contiguous()).max(dim=-1)[0].view(bsz, para_size, -1)
-
+		#句子中单词embedding
 		sent = self.word_emb(context_idxs)
+		# 实体的位置到id的映射
 		if self.use_coreference:
 			sent = torch.cat([sent, self.entity_embed(pos)], dim=-1)
-
+		#是否使用实体的类型映射
 		if self.use_entity_type:
 			sent = torch.cat([sent, self.ner_emb(context_ner)], dim=-1)
 
-		# sent = torch.cat([sent, context_ch], dim=-1)
+		# sent = torch.cat([sent, context_ch], dim=-1)， torch.Size([8, 231, 256])
 		context_output = self.rnn(sent, context_lens)
 
 		context_output = torch.relu(self.linear_re(context_output))
 
-
+		# shape torch.Size([8, 420, 128])
 		start_re_output = torch.matmul(h_mapping, context_output)
 		end_re_output = torch.matmul(t_mapping, context_output)
 
