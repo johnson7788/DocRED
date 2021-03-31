@@ -25,11 +25,12 @@ Data Format:
                     { 'name': 实体提及的名字，即一个实体, 
                       'sent_id': 实体在某个句子中出现，这个句子的id, 
                       'pos': 实体在这个句子中的起始和结束位置, 
-                      'type': 实体的NER类型NER_type}
-                    {anthor mention}
+                      'type': 实体的NER类型NER_type
+                    }
+                    {其它提及}
                   ], 
-                  [anthoer entity]
-                ]
+                  [其它实体]
+                
   'labels':   [
                 {
                   'h': 第一个实体在vertexSet中的的索引位置
